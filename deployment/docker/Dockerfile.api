@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────
+# HUBB API — Production Docker Image
+# ─────────────────────────────────────────────────────────────
+FROM python:3.11-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# ── Dependencies ─────────────────────────────────────────────
+FROM base AS deps
+
+COPY pyproject.toml ./
+RUN pip install poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --only main --no-root
+
+# ── Application ───────────────────────────────────────────────
+FROM deps AS app
+
+COPY src/ ./src/
+
+# Non-root user (security best practice)
+RUN addgroup --system hubb && adduser --system --ingroup hubb hubb
+USER hubb
+
+EXPOSE 8000
+
+# Gunicorn: 2 workers * (2 * CPU + 1) — conservative for ML-heavy workload
+CMD ["gunicorn", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "2", \
+     "--timeout", "120", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "src.api.app:create_app()"]

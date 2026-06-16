@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────
+# HUBB Worker — Celery Summarization Worker
+# ─────────────────────────────────────────────────────────────
+FROM python:3.11-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# ── Dependencies ─────────────────────────────────────────────
+FROM base AS deps
+
+COPY pyproject.toml ./
+RUN pip install poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --only main --no-root
+
+# ── Application ───────────────────────────────────────────────
+FROM deps AS app
+
+COPY src/ ./src/
+
+RUN addgroup --system hubb && adduser --system --ingroup hubb hubb
+USER hubb
+
+# prefetch=1: fair dispatch for slow ML inference tasks
+CMD ["celery", \
+     "--app", "src.workers.celery_app:celery_app", \
+     "worker", \
+     "--loglevel=info", \
+     "--concurrency=1", \
+     "--prefetch-multiplier=1", \
+     "--queues=summarization"]

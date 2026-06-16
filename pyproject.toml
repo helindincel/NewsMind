@@ -1,0 +1,59 @@
+[tool.poetry]
+name = "hubb"
+version = "1.0.0"
+description = "Production-Ready AI News Summarization Platform"
+authors = ["HUBB Team"]
+readme = "README.md"
+packages = [{ include = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+flask = "^3.0"
+requests = "^2.31"
+transformers = "^4.40"
+torch = { version = "^2.3", extras = ["cpu"] }
+pydantic-settings = "^2.2"
+structlog = "^24.1"
+python-dotenv = "^1.0"
+celery = { version = "^5.3", extras = ["redis"] }
+sqlalchemy = "^2.0"
+alembic = "^1.13"
+redis = "^5.0"
+prometheus-client = "^0.20"
+opentelemetry-sdk = "^1.24"
+opentelemetry-instrumentation-flask = "^0.45b0"
+opentelemetry-exporter-otlp-proto-grpc = "^1.24"
+gunicorn = "^22.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2"
+pytest-cov = "^5.0"
+ruff = "^0.4"
+mypy = "^1.10"
+safety = "^3.2"
+bandit = { version = "^1.7", extras = ["toml"] }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=src --cov-report=term-missing --cov-fail-under=50"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+
+[tool.coverage.run]
+omit = ["tests/*", "src/workers/tasks/summarize_task.py"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

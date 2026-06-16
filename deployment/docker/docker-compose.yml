@@ -1,0 +1,83 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL ───────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: hubb_db
+      POSTGRES_USER: hubb
+      POSTGRES_PASSWORD: hubb_local_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hubb -d hubb_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API ──────────────────────────────────────────────────────
+  api:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../../.env
+    environment:
+      - USE_REDIS=true
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://hubb:hubb_local_password@postgres:5432/hubb_db
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── Worker ───────────────────────────────────────────────────
+  worker:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.worker
+    env_file:
+      - ../../.env
+    environment:
+      - USE_REDIS=true
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://hubb:hubb_local_password@postgres:5432/hubb_db
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── Flower (Celery monitoring) ────────────────────────────────
+  flower:
+    image: mher/flower:2.0
+    command: celery flower --broker=redis://redis:6379/1
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:

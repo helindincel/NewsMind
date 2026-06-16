@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HUBB - News Summarizer</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #2f2f2f;
+            font-family: Arial, sans-serif;
+            color: #fff;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-color: #2f2f2f;
+        }
+        .circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #f4f0ec;
+            margin-right: -20px;
+            z-index: 2;
+        }
+        .banner {
+            background: linear-gradient(90deg, #d62828 50%, #3b3b98 50%);
+            padding: 20px 40px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .container {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .card {
+            background-color: #e5e5e5;
+            color: #111;
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .card img {
+            width: 100%;
+            border-radius: 10px;
+            object-fit: cover;
+            max-height: 180px;
+        }
+        .card h3 {
+            margin-top: 10px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .card p {
+            font-size: 14px;
+            color: #555;
+            margin-top: 8px;
+            text-align: justify;
+        }
+        .card .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .card .buttons a {
+            background-color: #5a00c5;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .search-box {
+            text-align: center;
+            margin: 20px auto;
+        }
+        .search-box input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+        }
+        .search-box button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #d62828;
+            color: white;
+            border-radius: 10px;
+            margin-left: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .error-message {
+            text-align: center;
+            color: #ff4d4d;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        #load-more-btn {
+            display: block;
+            margin: 30px auto;
+            padding: 12px 30px;
+            background-color: #d62828;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+        #load-more-btn:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="circle"></div>
+        <div class="banner">HUBB</div>
+    </header>
+
+    <div class="search-box">
+        <form method="post" id="search-form">
+            <input type="text" name="keyword" placeholder="Search news..." value="{{ keyword }}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    {% if error %}
+    <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    <div class="container" id="news-container">
+        {% for item in news_summaries %}
+        <div class="card">
+            <img src="{{ item.image_url }}" alt="news image" loading="lazy">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.summary }}</p>
+            <div class="buttons">
+                <a href="{{ item.url }}" target="_blank">Read More</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if total_pages > page %}
+    <button id="load-more-btn">Load More</button>
+    {% endif %}
+
+<script>
+const loadMoreBtn = document.getElementById('load-more-btn');
+const newsContainer = document.getElementById('news-container');
+const keyword = {{ keyword|tojson|safe }};
+let currentPage = {{ page | default(1) | tojson }};
+let totalPages = {{ total_pages | default(1) | tojson }};
+
+if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', () => {
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.textContent = "Loading...";
+
+        fetch(`/load_more?keyword=${encodeURIComponent(keyword)}&page=${currentPage + 1}`)
+            .then(response => response.json())
+            .then(data => {
+                // Hata veya yeni haber yoksa butonu gizle!
+                if (!data.success || !data.news || data.news.length === 0) {
+                    loadMoreBtn.disabled = true;
+                    loadMoreBtn.textContent = "No More News";
+                    // Eğer hiç haber yoksa butonu tamamen de gizleyebilirsin:
+                    // loadMoreBtn.style.display = 'none';
+                    return;
+                }
+
+                // Haberler varsa ekle
+                data.news.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <img src="${item.image_url}" alt="news image" loading="lazy">
+                        <h3>${item.title}</h3>
+                        <p>${item.summary}</p>
+                        <div class="buttons">
+                            <a href="${item.url}" target="_blank">Read More</a>
+                        </div>
+                    `;
+                    newsContainer.appendChild(card);
+                });
+
+                currentPage++;
+                // Her seferinde totalPages'i güncelle!
+                totalPages = Math.ceil(data.totalResults / 10); // page_size = 10
+
+                // Son sayfa mı kontrol et
+                if (currentPage >= totalPages || data.news.length === 0) {
+                    loadMoreBtn.disabled = true;
+                    loadMoreBtn.textContent = "No More News";
+                    // istersen burada da butonu gizleyebilirsin
+                    // loadMoreBtn.style.display = 'none';
+                } else {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.textContent = "Load More";
+                }
+            })
+            .catch(() => {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = "Load More";
+                alert("An error occurred while loading news.");
+            });
+    });
+}
+
+</script>
+</body>
+</html>
