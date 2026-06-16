@@ -22,6 +22,9 @@ env/
 htmlcov/
 coverage.xml
 
+# mypy cache
+.mypy_cache/
+
 # IDE
 .vscode/
 .idea/
