@@ -34,14 +34,16 @@ def configure_logging(environment: str = "development") -> None:
 
     if environment == "production":
         # JSON output — machine-readable, includes trace correlation
-        renderer = structlog.processors.JSONRenderer()
+        renderer: structlog.processors.JSONRenderer | structlog.dev.ConsoleRenderer = (
+            structlog.processors.JSONRenderer()
+        )
     else:
         # Human-readable output for local development
         renderer = structlog.dev.ConsoleRenderer(colors=True)
 
     structlog.configure(
         processors=[
-            *shared_processors,
+            *shared_processors,  # type: ignore[list-item]
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
         wrapper_class=structlog.stdlib.BoundLogger,
@@ -52,7 +54,7 @@ def configure_logging(environment: str = "development") -> None:
 
     formatter = structlog.stdlib.ProcessorFormatter(
         processor=renderer,
-        foreign_pre_chain=shared_processors,
+        foreign_pre_chain=shared_processors,  # type: ignore[arg-type]
     )
 
     handler = logging.StreamHandler(sys.stdout)

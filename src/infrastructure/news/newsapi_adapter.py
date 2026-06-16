@@ -51,7 +51,8 @@ class NewsAPIAdapter(INewsProvider):
         except requests.exceptions.Timeout as exc:
             raise NewsProviderException("NewsAPI request timed out") from exc
         except requests.exceptions.HTTPError as exc:
-            raise NewsProviderException(f"NewsAPI HTTP error: {exc.response.status_code}") from exc
+            status_code = exc.response.status_code if exc.response is not None else "unknown"
+            raise NewsProviderException(f"NewsAPI HTTP error: {status_code}") from exc
         except requests.exceptions.RequestException as exc:
             raise NewsProviderException(f"NewsAPI request failed: {exc}") from exc
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import structlog
 
 log = structlog.get_logger(__name__)
@@ -15,7 +17,7 @@ class ModelRegistry:
     _loaded_model_name: str | None = None
 
     @classmethod
-    def get(cls, model_name: str) -> object:
+    def get(cls, model_name: str) -> Any:
         if cls._instance is None or cls._loaded_model_name != model_name:
             from transformers import pipeline  # deferred import — heavy dependency
 

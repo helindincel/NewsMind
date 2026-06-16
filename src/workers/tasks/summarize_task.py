@@ -45,6 +45,9 @@ def summarize_article(self, article_id: str, model_version: str) -> dict:
     from src.config.settings import get_settings
     from src.domain.entities.summary import Summary, SummaryStatus
     from src.domain.exceptions import ContentTooShortException, SummarizationException
+    from src.domain.ports.i_cache import ICache
+    from src.domain.repositories.i_article_repository import IArticleRepository
+    from src.domain.repositories.i_summary_repository import ISummaryRepository
     from src.infrastructure.cache.in_memory_adapter import InMemoryCacheAdapter
     from src.infrastructure.database.in_memory_article_repository import (
         InMemoryArticleRepository,
@@ -57,6 +60,10 @@ def summarize_article(self, article_id: str, model_version: str) -> dict:
     settings = get_settings()
 
     # ── Resolve adapters (Phase 3: swap to Postgres/Redis when USE_REDIS=true) ─
+    article_repo: IArticleRepository
+    summary_repo: ISummaryRepository
+    cache: ICache
+
     if settings.USE_REDIS and settings.DATABASE_URL:
         from src.infrastructure.cache.redis_adapter import RedisCacheAdapter
         from src.infrastructure.database.postgres_article_repository import (
@@ -104,6 +111,7 @@ def summarize_article(self, article_id: str, model_version: str) -> dict:
             raise ContentTooShortException("Article content too short")
 
         summarizer = HuggingFaceAdapter(model_name=model_version)
+        assert article.content is not None  # guarded by has_sufficient_content() above
         summary_text = summarizer.summarize(article.content)
         duration_ms = int((time.perf_counter() - start) * 1000)
 
