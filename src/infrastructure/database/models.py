@@ -2,17 +2,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import (
-    Column,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
-)
-from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -26,17 +17,19 @@ def _now() -> datetime:
 class ArticleModel(Base):
     __tablename__ = "articles"
 
-    id = Column(String(36), primary_key=True)
-    title = Column(Text, nullable=False)
-    url = Column(Text, nullable=False)
-    content = Column(Text)
-    image_url = Column(Text)
-    source = Column(String(255))
-    keyword = Column(String(100))
-    published_at = Column(DateTime(timezone=True), nullable=False)
-    fetched_at = Column(DateTime(timezone=True), default=_now)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    url: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str | None] = mapped_column(Text)
+    image_url: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[str | None] = mapped_column(String(255))
+    keyword: Mapped[str | None] = mapped_column(String(100))
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    summaries = relationship("SummaryModel", back_populates="article", cascade="all, delete-orphan")
+    summaries: Mapped[list[SummaryModel]] = relationship(
+        "SummaryModel", back_populates="article", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         UniqueConstraint("url", name="uq_articles_url"),
@@ -48,16 +41,18 @@ class ArticleModel(Base):
 class SummaryModel(Base):
     __tablename__ = "summaries"
 
-    id = Column(String(36), primary_key=True)
-    article_id = Column(String(36), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
-    model_version = Column(String(255), nullable=False)
-    summary_text = Column(Text)
-    status = Column(String(20), nullable=False, default="pending")
-    created_at = Column(DateTime(timezone=True), default=_now)
-    duration_ms = Column(Integer)
-    error = Column(Text)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    article_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
+    )
+    model_version: Mapped[str] = mapped_column(String(255), nullable=False)
+    summary_text: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
+    error: Mapped[str | None] = mapped_column(Text)
 
-    article = relationship("ArticleModel", back_populates="summaries")
+    article: Mapped[ArticleModel] = relationship("ArticleModel", back_populates="summaries")
 
     __table_args__ = (
         UniqueConstraint("article_id", "model_version", name="uq_summaries_article_model"),
@@ -68,9 +63,9 @@ class SummaryModel(Base):
 class SearchQueryModel(Base):
     __tablename__ = "search_queries"
 
-    id = Column(String(36), primary_key=True)
-    keyword = Column(String(100), nullable=False)
-    result_count = Column(Integer)
-    created_at = Column(DateTime(timezone=True), default=_now)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    keyword: Mapped[str] = mapped_column(String(100), nullable=False)
+    result_count: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     __table_args__ = (Index("ix_search_queries_keyword", "keyword"),)

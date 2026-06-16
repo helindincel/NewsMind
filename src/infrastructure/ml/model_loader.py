@@ -22,7 +22,7 @@ class ModelRegistry:
             from transformers import pipeline  # deferred import — heavy dependency
 
             log.info("model.loading", model_name=model_name)
-            cls._instance = pipeline("summarization", model=model_name)
+            cls._instance = pipeline("summarization", model=model_name)  # type: ignore[call-overload]
             cls._loaded_model_name = model_name
             log.info("model.loaded", model_name=model_name)
         return cls._instance
