@@ -6,6 +6,7 @@ Flow:
   Worker picks up the task, runs HuggingFace inference,
   writes result to PostgreSQL + Redis, logs outcome.
 """
+
 from __future__ import annotations
 
 import time
@@ -135,4 +136,3 @@ def summarize_article(self, article_id: str, model_version: str) -> dict:
             raise self.retry(exc=exc)
         except self.MaxRetriesExceededError:
             return {"article_id": article_id, "status": "failed", "error": str(exc)}
-

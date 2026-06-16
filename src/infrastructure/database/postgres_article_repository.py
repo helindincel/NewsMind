@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
-
 import structlog
 from sqlalchemy.exc import IntegrityError
 
@@ -16,11 +14,7 @@ log = structlog.get_logger(__name__)
 class PostgresArticleRepository(IArticleRepository):
     def save(self, article: Article) -> Article:
         with get_session() as session:
-            existing = (
-                session.query(ArticleModel)
-                .filter_by(url=article.url)
-                .first()
-            )
+            existing = session.query(ArticleModel).filter_by(url=article.url).first()
             if existing:
                 return self._to_entity(existing)
 
@@ -42,23 +36,17 @@ class PostgresArticleRepository(IArticleRepository):
                 return self._to_entity(row)
             except IntegrityError:
                 session.rollback()
-                existing = (
-                    session.query(ArticleModel).filter_by(url=article.url).first()
-                )
+                existing = session.query(ArticleModel).filter_by(url=article.url).first()
                 return self._to_entity(existing) if existing else article
 
-    def find_by_id(self, article_id: str) -> Optional[Article]:
+    def find_by_id(self, article_id: str) -> Article | None:
         with get_session() as session:
             row = session.query(ArticleModel).filter_by(id=article_id).first()
             return self._to_entity(row) if row else None
 
-    def find_by_keyword(
-        self, keyword: str, page: int, page_size: int
-    ) -> Tuple[List[Article], int]:
+    def find_by_keyword(self, keyword: str, page: int, page_size: int) -> tuple[list[Article], int]:
         with get_session() as session:
-            q = session.query(ArticleModel).filter(
-                ArticleModel.keyword == keyword.lower()
-            )
+            q = session.query(ArticleModel).filter(ArticleModel.keyword == keyword.lower())
             total = q.count()
             rows = (
                 q.order_by(ArticleModel.published_at.desc())
@@ -68,9 +56,7 @@ class PostgresArticleRepository(IArticleRepository):
             )
             return [self._to_entity(r) for r in rows], total
 
-    def find_top_headlines(
-        self, page: int, page_size: int
-    ) -> Tuple[List[Article], int]:
+    def find_top_headlines(self, page: int, page_size: int) -> tuple[list[Article], int]:
         with get_session() as session:
             q = session.query(ArticleModel)
             total = q.count()

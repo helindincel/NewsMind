@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Column,
@@ -20,7 +20,7 @@ class Base(DeclarativeBase):
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class ArticleModel(Base):
@@ -36,9 +36,7 @@ class ArticleModel(Base):
     published_at = Column(DateTime(timezone=True), nullable=False)
     fetched_at = Column(DateTime(timezone=True), default=_now)
 
-    summaries = relationship(
-        "SummaryModel", back_populates="article", cascade="all, delete-orphan"
-    )
+    summaries = relationship("SummaryModel", back_populates="article", cascade="all, delete-orphan")
 
     __table_args__ = (
         UniqueConstraint("url", name="uq_articles_url"),
@@ -51,9 +49,7 @@ class SummaryModel(Base):
     __tablename__ = "summaries"
 
     id = Column(String(36), primary_key=True)
-    article_id = Column(
-        String(36), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
-    )
+    article_id = Column(String(36), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
     model_version = Column(String(255), nullable=False)
     summary_text = Column(Text)
     status = Column(String(20), nullable=False, default="pending")
@@ -64,9 +60,7 @@ class SummaryModel(Base):
     article = relationship("ArticleModel", back_populates="summaries")
 
     __table_args__ = (
-        UniqueConstraint(
-            "article_id", "model_version", name="uq_summaries_article_model"
-        ),
+        UniqueConstraint("article_id", "model_version", name="uq_summaries_article_model"),
         Index("ix_summaries_status", "status"),
     )
 

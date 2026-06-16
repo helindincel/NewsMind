@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 
@@ -27,7 +27,7 @@ class RedisCacheAdapter(ICache):
             socket_connect_timeout=2,
         )
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         try:
             raw = self._client.get(key)
             if raw is None:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-from typing import List, Optional
 
 import structlog
 
@@ -38,22 +37,18 @@ class SearchNewsUseCase:
         self._cache = cache
         self._model_version = model_version
 
-    def execute(
-        self, keyword: str, page: int = 1, page_size: int = 20
-    ) -> NewsListDTO:
+    def execute(self, keyword: str, page: int = 1, page_size: int = 20) -> NewsListDTO:
         kw = Keyword(keyword)
         kw_hash = hashlib.sha256(kw.normalized().encode()).hexdigest()[:16]
         cache_key = f"news:kw:{kw_hash}:{page}:{page_size}"
 
-        cached: Optional[NewsListDTO] = self._cache.get(cache_key)
+        cached: NewsListDTO | None = self._cache.get(cache_key)
         if cached is not None:
             log.info("search.cache_hit", keyword=kw.normalized(), cache_key=cache_key)
             return cached
 
         log.info("search.cache_miss", keyword=kw.normalized(), cache_key=cache_key)
-        articles, total = self._news_provider.fetch_by_keyword(
-            kw.normalized(), page, page_size
-        )
+        articles, total = self._news_provider.fetch_by_keyword(kw.normalized(), page, page_size)
         # Tag articles with keyword for repo queries
         for a in articles:
             a.keyword = kw.normalized()
@@ -70,12 +65,10 @@ class SearchNewsUseCase:
 
     # ── private ──────────────────────────────────────────────
 
-    def _build_article_dtos(self, articles: List[Article]) -> List[ArticleDTO]:
-        dtos: List[ArticleDTO] = []
+    def _build_article_dtos(self, articles: list[Article]) -> list[ArticleDTO]:
+        dtos: list[ArticleDTO] = []
         for article in articles:
-            summary = self._summary_repo.find_by_article_id(
-                article.id, self._model_version
-            )
+            summary = self._summary_repo.find_by_article_id(article.id, self._model_version)
             if summary is None and article.has_sufficient_content():
                 summary = self._run_summarizer(article)
 
@@ -93,7 +86,7 @@ class SearchNewsUseCase:
             )
         return dtos
 
-    def _run_summarizer(self, article: Article) -> Optional[Summary]:
+    def _run_summarizer(self, article: Article) -> Summary | None:
         try:
             text = self._summarizer.summarize(article.content)  # type: ignore[arg-type]
             summary = Summary(
@@ -104,7 +97,5 @@ class SearchNewsUseCase:
             )
             return self._summary_repo.save(summary)
         except (SummarizationException, ContentTooShortException) as exc:
-            log.warning(
-                "summarizer.skipped", article_id=article.id, reason=str(exc)
-            )
+            log.warning("summarizer.skipped", article_id=article.id, reason=str(exc))
             return None

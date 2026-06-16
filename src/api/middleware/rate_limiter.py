@@ -3,7 +3,6 @@ from __future__ import annotations
 import time
 from collections import defaultdict
 from threading import Lock
-from typing import Dict, Tuple
 
 from flask import Flask, Request, Response, abort, request
 
@@ -21,10 +20,10 @@ class RateLimiter:
         self._max = max_requests
         self._window = window_seconds
         # {ip: [(timestamp, count), ...]}
-        self._buckets: Dict[str, list] = defaultdict(list)
+        self._buckets: dict[str, list] = defaultdict(list)
         self._lock = Lock()
 
-    def is_allowed(self, ip: str) -> Tuple[bool, int]:
+    def is_allowed(self, ip: str) -> tuple[bool, int]:
         """
         Returns (allowed, requests_remaining).
         """
@@ -33,9 +32,7 @@ class RateLimiter:
 
         with self._lock:
             # Drop expired entries
-            self._buckets[ip] = [
-                ts for ts in self._buckets[ip] if ts > cutoff
-            ]
+            self._buckets[ip] = [ts for ts in self._buckets[ip] if ts > cutoff]
             count = len(self._buckets[ip])
             if count >= self._max:
                 return False, 0
@@ -71,9 +68,13 @@ def init_rate_limiter(app: Flask, max_requests: int = 60) -> None:
     def _add_rate_limit_headers(response: Response) -> Response:
         if _limiter is not None:
             ip = _get_client_ip(request)
-            _, remaining = _limiter.is_allowed.__func__(  # type: ignore[attr-defined]
-                _limiter, ip
-            ) if False else (True, 0)
+            _, remaining = (
+                _limiter.is_allowed.__func__(  # type: ignore[attr-defined]
+                    _limiter, ip
+                )
+                if False
+                else (True, 0)
+            )
             response.headers["X-RateLimit-Limit"] = str(_limiter._max)
         return response
 

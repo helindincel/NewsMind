@@ -92,6 +92,7 @@ def _summarizer(settings: Settings) -> HuggingFaceAdapter:
 
 # ── Use-case factories ───────────────────────────────────────
 
+
 def get_top_news_use_case() -> GetTopNewsUseCase:
     settings = get_settings()
     return GetTopNewsUseCase(
@@ -114,4 +115,3 @@ def get_search_news_use_case() -> SearchNewsUseCase:
         cache=get_cache(),
         model_version=settings.MODEL_VERSION,
     )
-

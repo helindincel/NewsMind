@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from flask import abort, request
+from flask import abort
 
 # Keyword: alphanumeric + space + hyphen, max 100 chars
 _KEYWORD_RE = re.compile(r"^[a-zA-Z0-9\s\-]{1,100}$")

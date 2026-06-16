@@ -17,14 +17,10 @@ class HuggingFaceAdapter(ISummarizer):
     def __init__(self, model_name: str) -> None:
         self._model_name = model_name
 
-    def summarize(
-        self, text: str, max_length: int = 60, min_length: int = 15
-    ) -> str:
+    def summarize(self, text: str, max_length: int = 60, min_length: int = 15) -> str:
         words = text.split()
         if len(words) < _MIN_WORDS:
-            raise ContentTooShortException(
-                f"Text has {len(words)} words; minimum is {_MIN_WORDS}"
-            )
+            raise ContentTooShortException(f"Text has {len(words)} words; minimum is {_MIN_WORDS}")
 
         adjusted_max = min(max_length, len(words) - 1)
         adjusted_min = min(min_length, max(5, adjusted_max // 2))

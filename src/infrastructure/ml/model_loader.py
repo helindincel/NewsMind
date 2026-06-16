@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import structlog
 
 log = structlog.get_logger(__name__)
@@ -13,8 +11,8 @@ class ModelRegistry:
     The model is loaded once per worker process on first use.
     """
 
-    _instance: Optional[object] = None
-    _loaded_model_name: Optional[str] = None
+    _instance: object | None = None
+    _loaded_model_name: str | None = None
 
     @classmethod
     def get(cls, model_name: str) -> object:

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Optional
 import uuid
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from enum import StrEnum
 
 
-class SummaryStatus(str, Enum):
+class SummaryStatus(StrEnum):
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -19,8 +18,8 @@ class Summary:
     article_id: str
     model_version: str
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    text: Optional[str] = None
+    text: str | None = None
     status: SummaryStatus = SummaryStatus.PENDING
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    duration_ms: Optional[int] = None
-    error: Optional[str] = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    duration_ms: int | None = None
+    error: str | None = None

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 import structlog
 
 from src.application.dtos.news_dto import ArticleDTO, NewsListDTO
@@ -38,7 +36,7 @@ class GetTopNewsUseCase:
 
     def execute(self, page: int = 1, page_size: int = 20) -> NewsListDTO:
         cache_key = f"news:top:{page}:{page_size}"
-        cached: Optional[NewsListDTO] = self._cache.get(cache_key)
+        cached: NewsListDTO | None = self._cache.get(cache_key)
         if cached is not None:
             log.info("news.cache_hit", cache_key=cache_key)
             return cached
@@ -57,12 +55,10 @@ class GetTopNewsUseCase:
 
     # ── private ──────────────────────────────────────────────
 
-    def _build_article_dtos(self, articles: List[Article]) -> List[ArticleDTO]:
-        dtos: List[ArticleDTO] = []
+    def _build_article_dtos(self, articles: list[Article]) -> list[ArticleDTO]:
+        dtos: list[ArticleDTO] = []
         for article in articles:
-            summary = self._summary_repo.find_by_article_id(
-                article.id, self._model_version
-            )
+            summary = self._summary_repo.find_by_article_id(article.id, self._model_version)
             if summary is None and article.has_sufficient_content():
                 summary = self._run_summarizer(article)
 
@@ -80,7 +76,7 @@ class GetTopNewsUseCase:
             )
         return dtos
 
-    def _run_summarizer(self, article: Article) -> Optional[Summary]:
+    def _run_summarizer(self, article: Article) -> Summary | None:
         try:
             text = self._summarizer.summarize(article.content)  # type: ignore[arg-type]
             summary = Summary(
@@ -91,7 +87,5 @@ class GetTopNewsUseCase:
             )
             return self._summary_repo.save(summary)
         except (SummarizationException, ContentTooShortException) as exc:
-            log.warning(
-                "summarizer.skipped", article_id=article.id, reason=str(exc)
-            )
+            log.warning("summarizer.skipped", article_id=article.id, reason=str(exc))
             return None

@@ -19,7 +19,7 @@ def create_celery_app() -> Celery:
         result_serializer="json",
         timezone="UTC",
         enable_utc=True,
-        task_acks_late=True,           # Re-queue on worker crash
+        task_acks_late=True,  # Re-queue on worker crash
         task_reject_on_worker_lost=True,
         worker_prefetch_multiplier=1,  # Fair dispatch for slow ML tasks
         task_track_started=True,

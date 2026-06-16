@@ -1,8 +1,7 @@
 from logging.config import fileConfig
 
-from sqlalchemy import create_engine, pool
-
 from alembic import context
+from sqlalchemy import create_engine, pool
 
 from src.infrastructure.database.models import Base
 
@@ -20,16 +19,16 @@ def _get_url() -> str:
     if url and not url.startswith("#"):
         return url
     import os
+
     url = os.getenv("DATABASE_URL")
     if url:
         return url
     from src.config.settings import get_settings
+
     settings = get_settings()
     if settings.DATABASE_URL:
         return settings.DATABASE_URL
-    raise RuntimeError(
-        "DATABASE_URL not set. Add it to .env or pass via environment variable."
-    )
+    raise RuntimeError("DATABASE_URL not set. Add it to .env or pass via environment variable.")
 
 
 def run_migrations_offline() -> None:
@@ -55,4 +54,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-

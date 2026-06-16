@@ -18,6 +18,7 @@ def health():
         # Cache health — import lazily to avoid circular deps
         try:
             from src.api.dependencies import get_cache
+
             cache = get_cache()
             cache.set("__health__", "ok", ttl=5)
             val = cache.get("__health__")

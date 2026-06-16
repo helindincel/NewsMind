@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import structlog
 
 from src.domain.entities.summary import Summary, SummaryStatus
@@ -30,9 +28,7 @@ class PostgresSummaryRepository(ISummaryRepository):
             session.refresh(row)
             return self._to_entity(row)
 
-    def find_by_article_id(
-        self, article_id: str, model_version: str
-    ) -> Optional[Summary]:
+    def find_by_article_id(self, article_id: str, model_version: str) -> Summary | None:
         with get_session() as session:
             row = (
                 session.query(SummaryModel)
@@ -41,7 +37,7 @@ class PostgresSummaryRepository(ISummaryRepository):
             )
             return self._to_entity(row) if row else None
 
-    def find_by_id(self, summary_id: str) -> Optional[Summary]:
+    def find_by_id(self, summary_id: str) -> Summary | None:
         with get_session() as session:
             row = session.query(SummaryModel).filter_by(id=summary_id).first()
             return self._to_entity(row) if row else None
@@ -50,8 +46,8 @@ class PostgresSummaryRepository(ISummaryRepository):
         self,
         summary_id: str,
         status: str,
-        text: Optional[str] = None,
-        error: Optional[str] = None,
+        text: str | None = None,
+        error: str | None = None,
     ) -> None:
         with get_session() as session:
             row = session.query(SummaryModel).filter_by(id=summary_id).first()

@@ -8,18 +8,16 @@ Exposes the following metrics:
   - app_summaries_total          (counter)    — summaries created (cached / fresh)
   - app_cache_hits_total         (counter)    — cache hit/miss
 """
+
 from __future__ import annotations
 
 import time
-from typing import Callable
 
 from flask import Flask, Request, Response, request
 from prometheus_client import (
-    CollectorRegistry,
     Counter,
     Gauge,
     Histogram,
-    REGISTRY,
 )
 
 # ── HTTP metrics ──────────────────────────────────────────────────────────────
@@ -47,19 +45,19 @@ HTTP_IN_FLIGHT = Gauge(
 NEWS_FETCHES_TOTAL = Counter(
     "app_news_fetches_total",
     "Successful news feed fetches",
-    ["feed_type"],           # top_headlines | keyword
+    ["feed_type"],  # top_headlines | keyword
 )
 
 SUMMARIES_TOTAL = Counter(
     "app_summaries_total",
     "Summary results served",
-    ["source"],              # cached | fresh | error
+    ["source"],  # cached | fresh | error
 )
 
 CACHE_OPS_TOTAL = Counter(
     "app_cache_ops_total",
     "Cache operations",
-    ["operation", "result"], # get/hit, get/miss, set/ok, delete/ok
+    ["operation", "result"],  # get/hit, get/miss, set/ok, delete/ok
 )
 
 

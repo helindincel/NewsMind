@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -24,7 +23,7 @@ class Settings(BaseSettings):
     USE_REDIS: bool = False
 
     # ── Database (Phase 1: in-memory, Phase 3: PostgreSQL) ────
-    DATABASE_URL: Optional[str] = None
+    DATABASE_URL: str | None = None
 
     # ── ML Model ──────────────────────────────────────────────
     MODEL_NAME: str = "sshleifer/distilbart-cnn-12-6"
@@ -37,7 +36,7 @@ class Settings(BaseSettings):
     # ── Observability (Phase 4) ───────────────────────────────
     OTEL_SERVICE_NAME: str = "hubb-api"
     OTEL_SERVICE_VERSION: str = "1.0.0"
-    OTEL_EXPORTER_OTLP_ENDPOINT: Optional[str] = None  # e.g. http://localhost:4317
+    OTEL_EXPORTER_OTLP_ENDPOINT: str | None = None  # e.g. http://localhost:4317
 
     # ── Security ──────────────────────────────────────────────
     RATE_LIMIT_PER_MINUTE: int = 60

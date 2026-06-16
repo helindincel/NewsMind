@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
 
 
 @dataclass
@@ -11,15 +10,15 @@ class ArticleDTO:
     title: str
     url: str
     published_at: datetime
-    image_url: Optional[str] = None
-    source: Optional[str] = None
-    summary_text: Optional[str] = None
-    summary_status: Optional[str] = None
+    image_url: str | None = None
+    source: str | None = None
+    summary_text: str | None = None
+    summary_status: str | None = None
 
 
 @dataclass
 class NewsListDTO:
-    articles: List[ArticleDTO]
+    articles: list[ArticleDTO]
     page: int
     page_size: int
     total: int

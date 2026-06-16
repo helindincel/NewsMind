@@ -5,12 +5,13 @@ Supports two modes:
 - Production: Set OTEL_EXPORTER_OTLP_ENDPOINT to send spans to any OTLP-compatible
   collector (Jaeger, Grafana Tempo, etc.).
 """
+
 from __future__ import annotations
 
 import logging
 
 from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME, SERVICE_VERSION
+from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,

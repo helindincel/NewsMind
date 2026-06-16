@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from collections import OrderedDict
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 
@@ -22,7 +22,7 @@ class InMemoryCacheAdapter(ICache):
         self._expiry: dict[str, float] = {}
         self._max_size = max_size
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         if key not in self._store:
             return None
         if self._is_expired(key):
